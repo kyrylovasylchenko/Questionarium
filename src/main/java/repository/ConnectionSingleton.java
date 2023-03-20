@@ -4,10 +4,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class ConnectionSingelton {
-    private static String user = "root";
+public class ConnectionSingleton {
+    private static String user = "postgres";
     private static String password = "root";
-    private static String url = "jdbc:mysql://localhost:3306/nikola_base";
+    private static String url = "jdbc:postgresql://localhost:5432/postgres";
     private static Connection connection;
 
     public static Connection getConnection() {

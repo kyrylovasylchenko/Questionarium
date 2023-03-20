@@ -2,23 +2,30 @@ package service;
 
 import model.Question;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import repository.ConnectionSingelton;
+import repository.ConnectionSingleton;
 import repository.QuestionRepositoryImp;
 import repository.dao.QuestionRepository;
 
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.*;
 
 public class QuestionServiceTest {
 
-    private   List<Question> testQuestions = List.of(
-            Question.builder().id(1).text("something").topic("testTopic").build(),
-            Question.builder().id(2).text("something").topic("testTopic").build(),
-            Question.builder().id(3).text("something").topic("testTopic").build());
+    private static Map<String, List<Question>> sqlTable = new HashMap<>();
 
-    private QuestionRepository repository = new QuestionRepository(){
+    private static List<Question> oopQuestions = List.of(
+            Question.builder().id(1).text("first").topic("OOP").build(),
+            Question.builder().id(2).text("second").topic("OOP").build(),
+            Question.builder().id(3).text("third").topic("OOP").build());
+
+    private static List<Question> newQuestions = List.of(
+            Question.builder().id(1).text("fourth").topic("NEW").build(),
+            Question.builder().id(2).text("fifth").topic("NEW").build(),
+            Question.builder().id(3).text("sixth").topic("NEW").build());
+
+    private QuestionRepository repository = new QuestionRepository() {
 
         @Override
         public Question get(int id) {
@@ -42,28 +49,53 @@ public class QuestionServiceTest {
 
         @Override
         public List<Question> getByTopic(String topic) {
-            return null;
+            return sqlTable.get(topic);
         }
 
         @Override
         public List<Question> getAllQuestions() throws SQLException {
-            return testQuestions;
+            ArrayList<Question> result = new ArrayList<>();
+            result.addAll(oopQuestions);
+            result.addAll(newQuestions);
+            return result;
+        }
+
+        @Override
+        public Set<String> getAllTopics() {
+            return null;
+        }
+
+        @Override
+        public Question getRndQuestion() {
+            return null;
         }
     };
+
+    @BeforeClass
+    public static void init() {
+        sqlTable.put("OOP", oopQuestions);
+        sqlTable.put("NEW", newQuestions);
+    }
 
 
     @Test
     public void getRndQuestionByTopicTest() throws SQLException {
         String topic = "OOP";
-        QuestionRepositoryImp impl = new QuestionRepositoryImp(ConnectionSingelton.getConnection());
-        QuestionService testService = new QuestionService(impl);
-        Question rndQuestionByTopic = testService.getRndQuestionByTopic(topic);
-        Assert.assertTrue(impl.getByTopic(topic).contains(rndQuestionByTopic));
+        QuestionService testService = new QuestionService(repository);
+        Set<Question> rndQuestions = new HashSet<>();
+        for (int i = 0; i < 5; i++) {
+            Question rndQuestionByTopic = testService.getRndQuestionByTopic(topic);
+            rndQuestions.add(rndQuestionByTopic);
+        }
+        Assert.assertTrue(rndQuestions.size() > 1);
     }
+
     @Test
-    public void getRndQuestionTest() throws SQLException {
-        QuestionService questionService = new QuestionService(this.repository);
-        Question rndQuestion = questionService.getRndQuestion();
-        Assert.assertTrue(testQuestions.contains(rndQuestion));
+    public void getAllQuestionByTopicTest() {
+        QuestionService questionService = new QuestionService(repository);
+        List<Question> oop = questionService.getAllQuestionByTopic("OOP");
+        Assert.assertEquals(oop, oopQuestions);
+
+
     }
 }
